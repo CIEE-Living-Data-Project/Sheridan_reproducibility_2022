@@ -1,0 +1,29 @@
+---
+title: "manuscript"
+author: "Kate Sheridan"
+date: "9/15/2022"
+
+geometry:  margin=1in
+header-includes:
+  #line numbers
+  \usepackage{lineno}
+  \linenumbers
+
+#csl: (url)
+#bibliography: references.bib
+output: pdf_document
+#output: word_document
+---
+
+```{r setup, include=FALSE}
+
+```
+
+# Abstract
+
+# Introduction
+
+# Methods
+
+
+# Figures
