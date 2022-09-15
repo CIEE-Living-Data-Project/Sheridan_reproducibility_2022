@@ -5,9 +5,15 @@ date: "9/13/2022"
 output: html_document
 ---
 
-Reduced OBIS/GBIF dataset for reproducibility course. Here for testing purposes before repository there is set up.
+Reduced OBIS/GBIF dataset for reproducibility course.
+
+Noting here that I am not using groundhog even though the checklist wants you to because I would have to set it up on multiple computers and change a lot of scripts that I'm currently actively working on for my thesis.
 
 ```{r setup, include=FALSE}
+#install.packages('robis')
+#install.packages('rgbif')
+#install.packages('worrms')
+
 library(tidyverse)
 library(robis)
 library(rgbif)
