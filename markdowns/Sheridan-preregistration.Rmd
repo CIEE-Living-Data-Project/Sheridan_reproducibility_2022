@@ -26,37 +26,35 @@ output: prereg::prereg_pdf
 <!-- 1) What is the main question being addressed in your study?
 Why is it important that we answer this question? What’s the big picture? -->
 ```
-Enter your response here.
-
-## Dependent variable(s)
-
-<!-- 2) Describe the key independent and dependent variable(s), specifying how they will be measured. Ensure that they are defined precisely. -->
-
-Enter your response here.
+Biogeography of nearshore Polychaetes and Bivalves off the Pacific Coast of North America
 
 ## Hypotheses
 
 <!-- 3) What are your hypotheses? Ensure that your predictions are defined precisely in terms of the specific IVs and DVs. Listing them as H0, H1, H2....Hn is recommended. -->
 
-Enter your response here.
-
-## Conditions
-
-<!-- 4) How many and which conditions will participants/samples be assigned to? Where applicable be sure to include details of randomisation, blinding and counterbalancing. Make it clear whether the design is within-subjects, between-subjects, mixed, or other. -->
-
-Enter your response here.
+I expect their patterns to match the biogeographic breaks recovered by Fenberg 2015 and Blanchette 2008 (insert citations).
 
 ## Data collection
 
 <!-- 5) How many observations will be collected and what rule will you use to terminate data collection? Ensure that your stopping rule takes into account any data exclusions. If adopting null hypothesis significance testing, what power will your study achieve? What effect size will you target and why? Remember that you are choosing the smallest effect size of theoretical or applied interest, or the smallest you can feasibly detect. For an actual RR you can use pilot data to help motivate this estimate, but you shouldn’t rely on pilot data alone because it is vulnerable to bias. If adopting Bayesian sampling methods, what is your prior? And what is your criterion Bayesfactor for asserting relative support of H0 or H1, or your maximum resource limit? -->
 
-Enter your response here.
+Two sources of data will inform the analyses: GBIF and OBIS.
+
+Records were queried using rgbif and robis, defined by a polygon encompassing the North American Pacific Coast and a selection of invertebrates specified at the family-level.
 
 ## Inclusion criteria
 
 <!-- 6) What are your study inclusion criteria? How will participants/samples be recruited/included and under what specific rules? -->
 
-Enter your response here.
+This project focuses on a subset of families from two classes of marine invertebrates: Bivalves and Polychaetes.
+
+Taxa were selected through analysis of a previous eDNA dataset from Calvert Island, BC. These data contained seagrass, kelp, and rocky bottom samples, amplified for COI and filtered to marine invertebrates. I identified generic and species-level assignments that were unique to seagrass samples, and determined which taxa were most abundant in terms of unique species assignments and unique genetic sequences.
+
+Polychaetes had the most species recovered, no matter how the data was grouped. Bivalves, specifically the species Kurtiella tumida, had the most unique genetic sequences in most samples, but especially in seagrass samples. However, as bivalves and polychaetes are very large classes with incredible levels of diversity, I restricted the taxonomic query to only families found in our environmental DNA dataset. Databases for assigning taxonomic identifications to genetic data are also notoriously incomplete for invertebrates, so selecting only the species identified in the eDNA samples filters to species that were in the database rather than a biologically meaningful subset. Increasing the query to the family level allows for closely related species and genera absent from the database to be recovered in big data occurrence records while still targeting the search towards the taxa that we found to be highly detectable with eDNA.
+
+However, as the taxa were selected using a temperate dataset, I expect some of the analyses to contradict the expected latitudinal diversity gradient. As the search was run at the family, level this allows for subtropical species not present in our temperate dataset to be found, but it does not allow for subtropical and tropical families that may occupy similar functional groups in seagrass habitats but are absent in temperate latitudes.
+
+As our first round of data from PECO will be fish, selecting invertebrates for this project will allow development of scripts without setting specific expectations for the data to come.
 
 ## Exclusion criteria
 
@@ -68,7 +66,55 @@ Enter your response here.
 
 <!-- 8) What positive controls or quality checks will confirm that the obtained results are able to provide a fair test of the stated hypothesis? WHAT’S THIS? A positive control tests the existence of phenomena that would confirm that the IV, DV or instrumentation was used correctly and is therefore capable of testing the main study predictions. One of the most famous positive control experiments was the use of the Galileo spacecraft to test for the existence of life on Earth (see: https://www-pw.physics.uiowa.edu/~dag/publications/1993_ASearchForLifeOnEarthFromTheGalileoSpacecraft_NATURE.pdf ). If the instrumentation on the probe couldn’t detectlife on Earth (i.e. had the positive control failed), then it would not be reasonable to use to the probe to test the hypothesis that life existed on other planets. Not all experimental designs have suitable positive controls. Where a positive control isn’t possible, think of what quality checks or verifications you would build into your design before results are known to convince a skeptic that you had conducted the experiment to a sufficient standard (e.g. noise within certain limits etc.). Make sure these are independent of your main hypothesis tests.  Where a positive control (e.g. manipulation check) or quality check (e.g. lack of floor or ceiling effects in data) requires a statistical test, ensure that the test is adequately powered or sampled. -->
 
-Enter your response here.
+*GBIF records:*
+
+85,789 records in raw dataset. 38,423 records in cleaned dataset.
+
+-   Remove high levels of coordinate uncertainty
+
+-   Restrict data sources, removing fossils and machine observations.
+
+-   Retain only Presence data
+
+-   Remove individual count == 0
+
+-   Remove records without dates and prior to 1944: older records tend to be less reliable and there were many changes in biodiversity recording practices around this time, so WWII works as a decent cutoff.
+
+-   Remove records that were only a family-level ID
+
+-   Use taxize to update the taxonomy to the WoRMS backbone:
+
+    -   retain the species and genus level IDs, retain GBIF original taxonomy and ID for later use
+
+    -   get_wormsid\_()
+
+    -   Use WoRMS aphiaID to pull higher taxonomy
+
+    -   Filter out any species that were identified by WoRMS as terrestrial or freshwater only
+
+    -   Filter out records with taxonomy not found or synonymized in WoRMS; retain list of rejected GBIF taxa as a 'problem list' to research in the literature later.
+
+*OBIS records:*
+
+25,914 records in raw dataset, 18,591 records in cleaned dataset
+
+-   Remove invalid dates
+
+-   Remove fossils and machine observations
+
+-   Remove records flagged as 'ON_LAND'
+
+-   Standardize taxonRank column
+
+-   Remove records that were only a family-level ID
+
+-   Rename columns to match GBIF data to merge
+
+*Combined dataset:*
+
+57.012 records in combined dataset. 44,038 records in cleaned dataset.
+
+-   Remove duplicate records: distinct by WoRMS scientific name, year, latitude and longitude. Seasonality and abundance are not important so one occurrence per species per year per coordinate pair is sufficient.
 
 ## Confirmatory analyses
 
@@ -76,13 +122,13 @@ Enter your response here.
 <!-- 9) Specify exactly which analyses you will conduct to examine the main question/hypothesis(es). Ensure that there is an exact correspondence between each scientific hypothesis and each statistical test. Failure to precisely specify these links is one of the main reasons RRs are rejected
 If your analysis strategy will depend on the results (e.g. normal vs. non-normal distribution) then specify the contingencies for making different choices, i.e. IF-THEN statements. In the event of a negative result, would you be happy to conclude that there “was no evidence of a difference” between conditions, or would you instead want to be able to make the stronger claim that “there is evidence of no difference between conditions”? The first inference is limited to absence of evidence while the second (stronger) one refers to evidence of absence. If you want to make the stronger inference, you will need Bayesian inferential methods (see: https://link.springer.com/content/pdf/10.3758%2Fs13423-017-1230-y.pdf ) or frequentist equivalence testing (see: https://journals.sagepub.com/doi/pdf/10.1177/1948550617697177 ). -->
 ```
-Enter your response here.
+Maps, clustering.
 
 ## Data type
 
 <!-- 10) Are you proposing to collect new data or analyse existing data? If the proposal involves existing data, what steps will you take to ensure that your analysis plan isn’t biased by any prior observation you have had of the data? -->
 
-Enter your response here.
+Existing data, they are new extractions from OBIS and GBIF so I have never seen the data before.
 
 <!-- You might be wondering: why is there no section for specifying exploratory analyses? That’s because for RRs we usually don’t allow authors to specify exploratory analyses in Stage 1 submissions. A central strength of the RR format is the unequivocal distinction it draws between confirmatory pre-registered analyses and exploratory unregistered analyses. Pre-specifying (usually vague) plans for exploratory analyses blurs this separation. Any analysis that can be precisely planned should be specified as confirmatory at Stage 1, even if a secondary hypothesis. And any analysis that can’t be precisely planned should be withheld until Stage 2, where it is then introduced and comprehensively reported in the Exploratory Analyses section of the Results. -->
 
