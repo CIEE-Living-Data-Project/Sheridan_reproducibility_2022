@@ -1,0 +1,40 @@
+---
+title: "03_mCART"
+author: "Kate Sheridan"
+date: "9/22/2022"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+## check which of these will work best
+#install.packages('rpart')
+#devtools::install_github("cran/mvpart")
+#install.packages('tree')
+
+# which?
+library(ggtree)
+# can't do multivariate?
+library(rpart)
+# from archives
+library(mvpart)
+library(tree)
+
+
+# packages I know I'll need
+library(tidyverse)
+library(ggplot2)
+library(here)
+
+
+```
+
+```{r load-in}
+poly <- read_csv(here('data', 'rawdata',
+                            '20220909_obis-gbif_bivalve-polychaete-subset.csv')) %>%
+  filter(class == "Polychaeta")
+
+
+```
+

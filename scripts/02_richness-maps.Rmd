@@ -38,9 +38,14 @@ world <- map_data("world")
 
 # Polychaetes
 
+
 ```{r polychaetes-map}
 # fix to work with RichnessGrid
 poly2 <- poly %>%
+  # trim to study range
+  filter(decimal_latitude > 30 & decimal_longitude < -116.4) %>%
+  filter(decimal_latitude < 63 & decimal_longitude > -142.5) %>%
+  # rename so richness grid understands
   rename(decimalLatitude = decimal_latitude,
          decimalLongitude = decimal_longitude) %>%
   select(worms_sciname, decimalLatitude, decimalLongitude) %>% 
@@ -75,6 +80,9 @@ ggplot() + geom_map(data = world,
 ```{r polychaetes-map}
 #fix to work with RichnessGrid
 biv2 <- biv %>%
+    # trim to study range
+  filter(decimal_latitude > 30 & decimal_longitude < -116.4) %>%
+  filter(decimal_latitude < 63 & decimal_longitude > -142.5) %>%
   rename(decimalLatitude = decimal_latitude,
          decimalLongitude = decimal_longitude) %>%
   select(worms_sciname, decimalLatitude, decimalLongitude) %>% 
@@ -105,3 +113,10 @@ ggplot() +
   labs(title = "Number of Bivalve Species", fill = "") + 
   theme(axis.title = element_blank())
 ```
+Quantify data
+
+```{r}
+## should check by genus and species
+length(unique(biv2$worms_sciname)) #143
+```
+
