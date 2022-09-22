@@ -54,13 +54,8 @@ However, as the taxa were selected using a temperate dataset, I expect some of t
 
 As our first round of data from PECO will be fish, selecting invertebrates for this project will allow development of scripts without setting specific expectations for the data to come.
 
-## Exclusion criteria
-
-Data cleaning
 
 ## Quality checks
-
-<!-- 8) What positive controls or quality checks will confirm that the obtained results are able to provide a fair test of the stated hypothesis? WHAT’S THIS? A positive control tests the existence of phenomena that would confirm that the IV, DV or instrumentation was used correctly and is therefore capable of testing the main study predictions. One of the most famous positive control experiments was the use of the Galileo spacecraft to test for the existence of life on Earth (see: https://www-pw.physics.uiowa.edu/~dag/publications/1993_ASearchForLifeOnEarthFromTheGalileoSpacecraft_NATURE.pdf ). If the instrumentation on the probe couldn’t detectlife on Earth (i.e. had the positive control failed), then it would not be reasonable to use to the probe to test the hypothesis that life existed on other planets. Not all experimental designs have suitable positive controls. Where a positive control isn’t possible, think of what quality checks or verifications you would build into your design before results are known to convince a skeptic that you had conducted the experiment to a sufficient standard (e.g. noise within certain limits etc.). Make sure these are independent of your main hypothesis tests.  Where a positive control (e.g. manipulation check) or quality check (e.g. lack of floor or ceiling effects in data) requires a statistical test, ensure that the test is adequately powered or sampled. -->
 
 *GBIF records:*
 
@@ -118,15 +113,15 @@ Data cleaning
 <!-- 9) Specify exactly which analyses you will conduct to examine the main question/hypothesis(es). Ensure that there is an exact correspondence between each scientific hypothesis and each statistical test. Failure to precisely specify these links is one of the main reasons RRs are rejected
 If your analysis strategy will depend on the results (e.g. normal vs. non-normal distribution) then specify the contingencies for making different choices, i.e. IF-THEN statements. In the event of a negative result, would you be happy to conclude that there “was no evidence of a difference” between conditions, or would you instead want to be able to make the stronger claim that “there is evidence of no difference between conditions”? The first inference is limited to absence of evidence while the second (stronger) one refers to evidence of absence. If you want to make the stronger inference, you will need Bayesian inferential methods (see: https://link.springer.com/content/pdf/10.3758%2Fs13423-017-1230-y.pdf ) or frequentist equivalence testing (see: https://journals.sagepub.com/doi/pdf/10.1177/1948550617697177 ). -->
 ```
-Maps, clustering.
+Maps for species richness and for existing taxa of interest. 
+
+Clustering using (method, double check notes)
 
 ## Data type
 
-<!-- 10) Are you proposing to collect new data or analyse existing data? If the proposal involves existing data, what steps will you take to ensure that your analysis plan isn’t biased by any prior observation you have had of the data? -->
+I am using existing data: but they will be new extractions from OBIS and GBIF so I have never seen the data before. The data I will analyze in my thesis will be new data.
 
-Existing data, they are new extractions from OBIS and GBIF so I have never seen the data before.
 
-<!-- You might be wondering: why is there no section for specifying exploratory analyses? That’s because for RRs we usually don’t allow authors to specify exploratory analyses in Stage 1 submissions. A central strength of the RR format is the unequivocal distinction it draws between confirmatory pre-registered analyses and exploratory unregistered analyses. Pre-specifying (usually vague) plans for exploratory analyses blurs this separation. Any analysis that can be precisely planned should be specified as confirmatory at Stage 1, even if a secondary hypothesis. And any analysis that can’t be precisely planned should be withheld until Stage 2, where it is then introduced and comprehensively reported in the Exploratory Analyses section of the Results. -->
 
 ```{=html}
 <!-- Tips for Avoiding Desk Rejection at Stage 1

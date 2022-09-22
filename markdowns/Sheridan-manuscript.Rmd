@@ -21,10 +21,28 @@ output: pdf_document
 
 # Abstract
 
+
+
+
 # Introduction
 
 # Methods
 
+Data were downloaded from the Global Biodiversity Information Framework (GBIF : CITE) and the Ocean Biodiversity Information System (OBIS CITE) on September 9th, 2022 using rgbif (cite package, version) and robis (cite package, version) respectively. Queries included a polygon for the North and Central American Pacific coastline from Alaska to the Equator, and restricted to 6 bivalve families and 11 polychaete families (Appendix). Families were selected for their prevalence in existing eDNA data.
+
+GBIF data were cleaned by removing high levels of coordinate uncertainty (100 meters of uncertainty for every 1000 meters), removing fossils and machine observations, removing individual counts of 0, removing records with only a family level id, then standardizing taxonomy to match the World Register of Marine Species (WoRMS; citation).
+
+
+
 # References
 
 # Figures
+
+
+
+# Appendix 
+
+### Families selected
+Bivalves: "Veneridae", "Myidae", "Glycymerididae", "Lasaeidae", "Mactridae", "Tellinidae",
+Polychaetes: "Polynoidae", "Glyceridae", "Sabellidae",  "Goniadidae", "Capitellidae", "Syllidae","Nereididae", "Orbiniidae", "Phyllodocidae", "Sigalionidae"
+
