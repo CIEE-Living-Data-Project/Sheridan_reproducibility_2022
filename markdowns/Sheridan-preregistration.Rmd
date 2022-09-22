@@ -30,21 +30,19 @@ Biogeography of nearshore Polychaetes and Bivalves off the Pacific Coast of Nort
 
 ## Hypotheses
 
-<!-- 3) What are your hypotheses? Ensure that your predictions are defined precisely in terms of the specific IVs and DVs. Listing them as H0, H1, H2....Hn is recommended. -->
+I expect patterns of both groups to match the biogeographic breaks recovered by Fenberg 2015 and Blanchette 2008 (insert citations). I also expect Polychaetes and Bivalves to be concurrent due to similar dispersal methods; many Polychaetes are also sedentary adults or very small.
 
-I expect their patterns to match the biogeographic breaks recovered by Fenberg 2015 and Blanchette 2008 (insert citations).
+H0: No pattern
+H1: Pattern matching existing biogeographic literature + known biogeographic breaks
 
 ## Data collection
 
-<!-- 5) How many observations will be collected and what rule will you use to terminate data collection? Ensure that your stopping rule takes into account any data exclusions. If adopting null hypothesis significance testing, what power will your study achieve? What effect size will you target and why? Remember that you are choosing the smallest effect size of theoretical or applied interest, or the smallest you can feasibly detect. For an actual RR you can use pilot data to help motivate this estimate, but you shouldn’t rely on pilot data alone because it is vulnerable to bias. If adopting Bayesian sampling methods, what is your prior? And what is your criterion Bayesfactor for asserting relative support of H0 or H1, or your maximum resource limit? -->
-
 Two sources of data will inform the analyses: GBIF and OBIS.
 
-Records were queried using rgbif and robis, defined by a polygon encompassing the North American Pacific Coast and a selection of invertebrates specified at the family-level.
+Records were queried using rgbif and robis, defined by a polygon encompassing the North American Pacific Coast and a selection of invertebrates specified at the family-level. Taxonomy will be standardized using the WoRMS backbone.
 
 ## Inclusion criteria
 
-<!-- 6) What are your study inclusion criteria? How will participants/samples be recruited/included and under what specific rules? -->
 
 This project focuses on a subset of families from two classes of marine invertebrates: Bivalves and Polychaetes.
 
@@ -58,9 +56,7 @@ As our first round of data from PECO will be fish, selecting invertebrates for t
 
 ## Exclusion criteria
 
-<!-- 7) What are your data exclusion criteria? State rules for excluding data both at the level of samples/participants (within groups) and at the level of raw data (within samples/participants), e.g. conditions involving data quality, completeness and outliers. Remember to be comprehensive: exclusion criteria are very difficult to change after data collection has commenced because doing so risks introducing bias. Think about previous experiments you have done and all the reasons you have ever thrown out a data set or data point. -->
-
-Enter your response here.
+Data cleaning
 
 ## Quality checks
 

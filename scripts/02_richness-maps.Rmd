@@ -5,7 +5,10 @@ date: "9/15/2022"
 output: html_document
 ---
 
+This script generates maps of species richness from the data we downloaded from OBIS and GBIF.
+
 ```{r setup, include=FALSE}
+#install packages if needed
 #devtools::install_github("azizka/speciesgeocodeR")
 #install.packages('raster')
 
@@ -15,6 +18,8 @@ library(tidyverse)
 library(ggplot2)
 library(here)
 ```
+
+When we load in the files, we'll split them between the two classes to analyze separately.
 
 ```{r load-in}
 poly <- read_csv(here('data', 'rawdata',
@@ -30,73 +35,73 @@ world <- map_data("world")
 ```
 
 
-```{r test-map}
-ggplot() + 
-  geom_map(data = world, map = world, aes(x = long, y = lat, map_id = region), fill = "grey80") + 
-  xlim(min(poly$decimal_longitude, na.rm = T), 
-       max(poly$decimal_longitude, na.rm = T)) + 
-  ylim(min(poly$decimal_latitude, na.rm = T), 
-       max(poly$decimal_latitude, na.rm = T)) + 
-  geom_point(data = poly, 
-             aes(x = decimal_longitude, y = decimal_latitude), 
-             size = 1) + 
-  coord_fixed() + 
-  theme_bw() + 
-  theme(axis.title = element_blank())
-```
-
 
 # Polychaetes
 
 ```{r polychaetes-map}
+# fix to work with RichnessGrid
 poly2 <- poly %>%
   rename(decimalLatitude = decimal_latitude,
          decimalLongitude = decimal_longitude) %>%
   select(worms_sciname, decimalLatitude, decimalLongitude) %>% 
   distinct()
 
-
+# use RichnessGrid to calculate species richness per grid square 
 poly_alpha <- RichnessGrid(poly2, type = "spnum")
 
-plot(poly_alpha)
-# Or more sofisticated plotting Prepare for plotting
-## this messed up the points somehow, fix hahahaha
+## convert to plot
 poly_alphaplot <- data.frame(rasterToPoints(poly_alpha))
 
 # Visualize
-ggplot() + geom_map(data = world, map = world, aes(x = long, y = lat, map_id = region), fill = "grey80") +
+ggplot() + geom_map(data = world, 
+                    map = world, 
+                    aes(x = long, y = lat, map_id = region), 
+                    fill = "grey80") +
   xlim(min(poly2$decimalLongitude, na.rm = T),  
        max(poly2$decimalLongitude, na.rm = T)) + 
- ylim(min(poly2$decimalLatitude, na.rm = T), 
+  ylim(min(poly2$decimalLatitude, na.rm = T), 
       max(poly2$decimalLatitude, na.rm = T)) + 
-    geom_raster(data = poly_alphaplot, aes(x = y, y = x, fill = layer)) + 
-coord_fixed() + theme_bw() + ggtitle("Number of Species") + theme(axis.title = element_blank())
+  # note that somehow lat and long got switched
+  geom_raster(data = poly_alphaplot, aes(x = y, y = x, fill = layer)) + 
+  coord_fixed() + 
+  theme_bw() + 
+  labs(title = "Number of Polychaete Species", fill = "") + 
+  theme(axis.title = element_blank())
 ```
 
 
 # Bivalves
 
 ```{r polychaetes-map}
+#fix to work with RichnessGrid
 biv2 <- biv %>%
   rename(decimalLatitude = decimal_latitude,
          decimalLongitude = decimal_longitude) %>%
   select(worms_sciname, decimalLatitude, decimalLongitude) %>% 
   distinct()
 
-
+# RichnessGrid to calculate number of species x square
 biv_alpha <- RichnessGrid(biv2, type = "spnum")
 
-plot(biv_alpha)
-# Or more sofisticated plotting Prepare for plotting
-## this messed up the points somehow, fix hahahaha
+# convert to plot
 biv_alphaplot <- data.frame(rasterToPoints(biv_alpha))
 
 # Visualize
-ggplot() + geom_map(data = world, map = world, aes(x = long, y = lat, map_id = region), fill = "grey80") +
+ggplot() + 
+  geom_map(data = world, 
+                    map = world, 
+           aes(x = long, y = lat, map_id = region), 
+           fill = "grey80") +
+  # limit plot area to data
   xlim(min(biv2$decimalLongitude, na.rm = T),  
        max(biv2$decimalLongitude, na.rm = T)) + 
- ylim(min(biv2$decimalLatitude, na.rm = T), 
+  ylim(min(biv2$decimalLatitude, na.rm = T), 
       max(biv2$decimalLatitude, na.rm = T)) + 
-    geom_raster(data = biv_alphaplot, aes(x = y, y = x, fill = layer)) + 
-coord_fixed() + theme_bw() + ggtitle("Number of Species") + theme(axis.title = element_blank())
+  # coordinates get flipped somehow
+  geom_raster(data = biv_alphaplot, 
+              aes(x = y, y = x, fill = layer)) + 
+  coord_fixed() +
+  theme_bw() + 
+  labs(title = "Number of Bivalve Species", fill = "") + 
+  theme(axis.title = element_blank())
 ```

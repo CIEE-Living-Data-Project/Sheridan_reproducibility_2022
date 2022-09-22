@@ -10,20 +10,25 @@ Reduced OBIS/GBIF dataset for reproducibility course.
 Noting here that I am not using groundhog even though the checklist wants you to because I would have to set it up on multiple computers and change a lot of scripts that I'm currently actively working on for my thesis.
 
 ```{r setup, include=FALSE}
+
+## Install anything you don't have!
 #install.packages('robis')
 #install.packages('rgbif')
 #install.packages('worrms')
+#install.packages('here')
 
+# load libraries
 library(tidyverse)
 library(robis)
 library(rgbif)
 library(worrms)
 library(taxize)
-
 library(here)
 ```
 
-```{r functions}
+This is a custom function I wrote to use worrms to extract taxonomy information for species using the worrms package. Names are extracted from the World Record of Marine Species (WoRMS), which is the most authoritative source for marine taxonomy. Using this call, I am also able to extract other information from the WoRMS that I can't with taxize; specifically "is_terrestrial" and "is_freshwater", which I use to filter out species that are only found in non-marine realms but are present in the data.
+
+```{r function worrms}
 ## requires worrms to be loaded
 # input is vector of species names
 # uses wm_records_names to extract 
@@ -243,8 +248,8 @@ gbif_cl_tax <- gbifids %>%
 write_csv(gbif_cl_tax, here('data', 'rawdata',
                             '20220909_gbif_bivalve-polychaete-subset.csv'))
 
-#TA's suggestaion
-write.csv(object, file =paste0("name",Sys.Date(), ".csv"))
+#TA's suggestaion; incorporate later
+#write.csv(object, file =paste0("name",Sys.Date(), ".csv"))
 
   ## identify taxonomic problems
 problems <- gbifids %>%
@@ -334,9 +339,9 @@ write_csv(obis_cl, here('data', 'rawdata',
 ## Merge gbif-obis
 
 ```{r}
-# load in if needed
-#gbif_cl_tax <- read_csv()
-#obis_cl <- read_csv()
+# load in cleaned files if needed
+#gbif_cl_tax <- read_csv(here('data', 'rawdata', '20220909_gbif_bivalve-polychaete-subset.csv'))
+#obis_cl <- read_csv(here('data', 'rawdata', '20220909_obis_bivalve-polychaete-subset.csv'))
 
 bigdat <- obis_cl %>% 
   full_join(gbif_cl_tax) %>%
