@@ -1,0 +1,106 @@
+---
+title: "03_mCART"
+author: "Kate Sheridan"
+date: "9/22/2022"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+## check which of these will work best
+#install.packages('rpart')
+#devtools::install_github("cran/mvpart")
+#install.packages('tree')
+
+# which?
+#library(ggtree)
+# can't do multivariate?
+library(rpart)
+# from archives
+library(mvpart)
+library(tree)
+
+
+# packages I know I'll need
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+library(vegan)
+library(phytools)
+library(here)
+
+
+```
+
+```{r load-in}
+# only polychaetes a bit outside study range
+poly <- read_csv(here('data', 'rawdata',
+                            '20220909_obis-gbif_bivalve-polychaete-subset.csv')) %>%
+  filter(class == "Polychaeta") %>%
+  filter(rank == 'species') %>%
+  filter(decimal_latitude > 25) %>%
+  filter(decimal_latitude < 65)
+
+```
+
+# Format data for analysis
+
+## Range-through
+```{r rangethrough}
+# generate min and max ranges
+poly_rt <- poly %>%
+  group_by(worms_sciname) %>%
+  summarise(min_lat = min(decimal_latitude), max_lat = max(decimal_latitude)) %>%
+  # remove species that are unique to outside study range
+  filter(max_lat >= 30 & max_lat <= 63) %>%
+  rownames_to_column('index')
+
+# make bins
+# 32 1 degree latitude bins from 30-62N
+bins <- data.frame(min = seq(30:61) + 29, max = seq(30:61) + 30)
+
+#define binning function
+bin_fun <- function(min_lat, max_lat, min, max){
+  col <- ifelse((min_lat <= max & max_lat >= min), 1, 0)
+  x <- as.data.frame(col)
+}
+
+# taxa P/A for bins
+poly_bin <- map2_dfc(poly_rt$min_lat, poly_rt$max_lat, bins$min, bins$max, .f = bin_fun)
+
+# fix up to be usable
+poly_bin2 <- poly_bin %>%
+  # column for which bin
+  mutate(bin_lat = seq(30:61) +29) %>%
+  relocate(bin_lat) %>%
+  # remove extra letters in names
+  rename_with(., ~ str_remove_all(., 'col\\.\\.\\.')) %>%
+  pivot_longer(-c("bin_lat"), names_to = 'index') %>%
+  #species names into dataframe
+  left_join(poly_rt) %>%
+  select(!(c(index, min_lat, max_lat))) %>%
+  #format into site x species P/A matrix
+  pivot_wider(id_cols = bin_lat, names_from = worms_sciname) %>%
+  column_to_rownames('bin_lat')
+
+```
+
+
+## Dissimilarity matrix
+
+```{r dissimilarity}
+# Jaccard distance
+poly_jaccard <- vegdist(poly_bin2, method = 'jaccard', binary = T)
+```
+
+test
+```{r cluster}
+poly_fit <- hclust(poly_jaccard, method = 'average')  #change cluster method
+#mifish_clust <- cutree(mifish_fit, 4)  # change number of clusters
+
+
+plot(poly_fit)
+```
+
+

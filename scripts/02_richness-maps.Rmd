@@ -72,6 +72,8 @@ ggplot() + geom_map(data = world,
   theme_bw() + 
   labs(title = "Number of Polychaete Species", fill = "") + 
   theme(axis.title = element_blank())
+
+ggsave(here('output', 'maps', '20220924_polychaete_richness.png'))
 ```
 
 
@@ -112,6 +114,8 @@ ggplot() +
   theme_bw() + 
   labs(title = "Number of Bivalve Species", fill = "") + 
   theme(axis.title = element_blank())
+
+ggsave(here('output', 'maps', '20220924_bivalve_richness.png'))
 ```
 Quantify data
 
