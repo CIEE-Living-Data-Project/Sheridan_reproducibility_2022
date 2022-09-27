@@ -9,40 +9,40 @@ header-includes:
   \usepackage{lineno}
   \linenumbers
 
-#csl: (url)
-#bibliography: references.bib
+csl: frontiers-biogeo.csl
+bibliography: [grateful-refs.bib, ldp-bibliography.bib]
 output: pdf_document
 #output: word_document
 ---
 
 ```{r setup, include=FALSE}
-
+# generate bibliography for packages used
+#remotes::install_github("Pakillo/grateful")
+library(grateful)
+get_pkgs_info(pkgs = c('rgbif', 'robis', 'worrms'))
 ```
 
 # Abstract
-
-
-
 
 # Introduction
 
 # Methods
 
-Data were downloaded from the Global Biodiversity Information Framework (GBIF : CITE) and the Ocean Biodiversity Information System (OBIS CITE) on September 9th, 2022 using rgbif (cite package, version) and robis (cite package, version) respectively. Queries included a polygon for the North and Central American Pacific coastline from Alaska to the Equator, and restricted to 6 bivalve families and 11 polychaete families (Appendix). Families were selected for their prevalence in existing eDNA data.
+Data were downloaded from the Global Biodiversity Information Framework (GBIF) and the Ocean Biodiversity Information System (OBIS) on September 9th, 2022 using rgbif [@rgbif2022] and robis [@robis] respectively. Queries included a polygon for the North and Central American Pacific coastline from Alaska to the Equator, and restricted to 6 bivalve families and 11 polychaete families (Appendix). Families were selected for their prevalence in existing eDNA data.
 
-GBIF data were cleaned by removing high levels of coordinate uncertainty (100 meters of uncertainty for every 1000 meters), removing fossils and machine observations, removing individual counts of 0, removing records with only a family level id, then standardizing taxonomy to match the World Register of Marine Species (WoRMS; citation).
-
-
+GBIF data were cleaned by removing high levels of coordinate uncertainty (100 meters of uncertainty for every 1000 meters), removing fossils and machine observations, removing individual counts of 0, removing records with only a family level id, then standardizing taxonomy to match the World Register of Marine Species (WoRMS) [@worms_editorial_board_world_2022].
 
 # References
 
+::: {#refs}
+:::
+
 # Figures
 
-
-
-# Appendix 
+# Appendix
 
 ### Families selected
-Bivalves: "Veneridae", "Myidae", "Glycymerididae", "Lasaeidae", "Mactridae", "Tellinidae",
-Polychaetes: "Polynoidae", "Glyceridae", "Sabellidae",  "Goniadidae", "Capitellidae", "Syllidae","Nereididae", "Orbiniidae", "Phyllodocidae", "Sigalionidae"
 
+Bivalves: Veneridae, Myidae, Glycymerididae, Lasaeidae, Mactridae, Tellinidae
+
+Polychaetes: Polynoidae, Glyceridae, Sabellidae, Goniadidae, Capitellidae, Syllidae, Nereididae, Orbiniidae, "Phyllodocidae, Sigalionidae
