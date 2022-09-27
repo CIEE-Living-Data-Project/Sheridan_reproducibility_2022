@@ -1,0 +1,105 @@
+---
+title: "04_breaks-mapping"
+author: "Kate Sheridan"
+date: "9/27/2022"
+output: html_document
+---
+
+This script will make neat maps from the clusters!
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ape)
+library(here)
+```
+
+```{r load-in}
+poly_rt <- read_csv(here('data', 'processeddata', '20220926_range-through_polychaete.csv'))[-1]
+poly_clust <- read_csv(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.csv'))[-1]
+poly_tree <- read.tree(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.tre'))
+
+biv_rt <-  read_csv(here('data', 'processeddata', '20220926_range-through_bivalve.csv'))[-1]
+biv_clust <- read_csv(here('data', 'processeddata', '20220926_mcart-cluster_bivalves.csv'))[-1]
+biv_tree <- read.tree(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.tre'))
+```
+
+
+### Visualize ranges
+
+Use range-through data to visualize the minimum and maximum extents of ranges
+
+Polychaete species have minimums and maximiums across the study area, but it seems like there are several common min and max bins. 
+
+```{r range-plots}
+### Polychaetes
+
+# min and max for each species
+## in points; one pair of points per species
+## order by minimum latitude
+ggplot(poly_rt) +
+  geom_point(aes(x = reorder(index, min_lat), y = max_lat), 
+             color = 'blue',
+             alpha = .7) +
+  geom_point(aes(x = reorder(index, min_lat), y = min_lat), 
+             color = 'red',
+             alpha = .4) +
+  labs(title = 'Polychaete minimum and maximum occurrences', y = 'Latitude', x = 'Species') +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank())
+
+ggsave(here('output', 'sp_range', '20220926_minmax-dots_polychaetes.png'))
+
+
+# in boxplots
+ggplot(poly_rt) + 
+  geom_boxplot(aes(y = max_lat, x = 1), 
+               fill = 'blue', 
+               alpha = .5) +
+  geom_boxplot(aes(y = min_lat, x = 2), 
+               fill = 'red', 
+               alpha = .5) +
+  labs(title = 'Polychaete minimum and maximum occurrences', y = 'Latitude', x = '') +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        panel.grid = element_blank())
+
+ggsave(here('output', 'sp_range', '20220926_minmax-box_polychaetes.png'))
+
+### Bivalves
+
+# min and max for each species
+## in points; one pair of points per species
+ggplot(biv_rt) +
+  geom_point(aes(x = reorder(index, min_lat), y = max_lat), 
+             color = 'blue',
+             alpha = .7) +
+  geom_point(aes(x = reorder(index, min_lat), y = min_lat), 
+             color = 'red',
+             alpha = .4) +
+  labs(title = 'Bivalve minimum and maximum occurrences', y = 'Latitude', x = 'Species') +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank())
+
+ggsave(here('output', 'sp_range', '20220926_minmax-dots_bivalves.png'))
+
+
+# in boxplots
+ggplot(biv_rt) + 
+  geom_boxplot(aes(y = max_lat, x = 1), 
+               fill = 'blue', 
+               alpha = .5) +
+  geom_boxplot(aes(y = min_lat, x = 2), 
+               fill = 'red', 
+               alpha = .5) +
+  labs(title = 'Bivalve minimum and maximum occurrences', y = 'Latitude', x = '') +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        panel.grid = element_blank())
+
+ggsave(here('output', 'sp_range', '20220926_minmax-box_bivalves.png'))
+```
+
+
