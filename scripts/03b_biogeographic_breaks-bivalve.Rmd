@@ -4,26 +4,31 @@ author: "Kate Sheridan"
 date: "9/24/2022"
 output: html_document
 ---
+# IMPORTANT NOTE
+Key package mvpart is not currently available on cran and needs to be installed from the archives. Use devtools to install!
 
+
+# Overview
+This script is identical to the polychaete script but for bivalves, see 03a for more details and annotations.
+
+
+# Setup
 ```{r setup, include=FALSE}
 ## check which of these will work best
-#install.packages('rpart')
 #devtools::install_github("cran/mvpart")
-#install.packages('tree')
-
-# which?
-#library(ggtree)
-# can't do multivariate?
-library(rpart)
-# from archives
 library(mvpart)
-library(tree)
+
+## for converting to useful formats
+#install.packages('data.tree')
+library(data.tree)
 
 
 # packages I know I'll need
 library(tidyverse)
 library(stringr)
 library(ggplot2)
+library(vegan)
+library(ape)
 library(here)
 
 
@@ -43,6 +48,8 @@ biv <- read_csv(here('data', 'rawdata',
 # Format data for analysis
 
 ## Range-through
+
+Unique to range: 144 Bivalve species
 ```{r rangethrough}
 # generate min and max ranges
 biv_rt <- biv %>%
@@ -52,9 +59,13 @@ biv_rt <- biv %>%
   filter(max_lat >= 30 & max_lat <= 63) %>%
   rownames_to_column('index')
 
+# write if needed
+#write.csv(biv_rt, here('data', 'processeddata', '20220926_range-through_bivalve.csv'))
+
 # make bins
 # 32 1 degree latitude bins from 30-62N
-bins <- data.frame(min = seq(30:61) + 29, max = seq(30:61) + 30)
+bins <- data.frame(min = seq(30:61) + 29, max = seq(30:61) + 30) %>%
+  rownames_to_column('bin_index')
 
 #define binning function
 bin_fun <- function(min_lat, max_lat, min, max){
@@ -66,7 +77,7 @@ bin_fun <- function(min_lat, max_lat, min, max){
 biv_bin <- map2_dfc(biv_rt$min_lat, biv_rt$max_lat, bins$min, bins$max, .f = bin_fun)
 
 # fix up to be usable
-biv_bin2 <- biv_bin %>%
+biv_bin <- biv_bin %>%
   # column for which bin
   mutate(bin_lat = seq(30:61) +29) %>%
   relocate(bin_lat) %>%
@@ -74,7 +85,7 @@ biv_bin2 <- biv_bin %>%
   rename_with(., ~ str_remove_all(., 'col\\.\\.\\.')) %>%
   pivot_longer(-c("bin_lat"), names_to = 'index') %>%
   #species names into dataframe
-  left_join(poly_rt) %>%
+  left_join(biv_rt) %>%
   select(!(c(index, min_lat, max_lat))) %>%
   #format into site x species P/A matrix
   pivot_wider(id_cols = bin_lat, names_from = worms_sciname) %>%
@@ -83,20 +94,95 @@ biv_bin2 <- biv_bin %>%
 ```
 
 
+## nMDS
 
-## Dissimilarity matrix
+```{r}
+#run the ordination
+biv_nmds <- biv_bin %>%
+  #run ordination
+  metaMDS(.,
+          distance = "jaccard",
+          k = 2,
+          trymax = 5000)
 
-```{r dissimilarity}
+# check stress
+stressplot(biv_nmds)
+
+#extract from NMDS
+biv_nmds_scores <- as.data.frame(biv_nmds$points) %>%
+  rownames_to_column(var = "lat_bin") 
+
+# keeping the ordination simple
+# we can see the latitudinal pattern
+ggplot(biv_nmds_scores) +
+  geom_point(aes(x = MDS1, y = MDS2, col = lat_bin)) +
+  theme_bw()
+
+ggsave(here('output', 'clustering', '20220926_nmds_bivalves.png'))
+```
+
+# mCART
+```{r mcart}
 # Jaccard distance
-biv_jaccard <- vegdist(biv_bin2, method = 'jaccard', binary = T)
+biv_jaccard <- vegdist(biv_bin, method = 'jaccard', binary = T)
+
+biv_mvpart <- mvpart(as.matrix(biv_jaccard) ~ min,
+                      # distance matrix vs latitude bins
+                      data = bins,
+                      # select minimum tree
+                      ## within one standard error
+                      xv = '1se',
+                      # cross validation settings
+                      xval = nrow(bins),
+                      xvmult = 50,
+                      # also plot PCA
+                      pca = T,
+                     rsq = T
+                      )
+
+# tear apart the object and reconstruct it
+# because mvpart is deprecated we need to manually extract
+## the useful parts of the output for full control over plotting
+
+biv_mvpart_data <- as.data.frame(biv_mvpart$frame) %>%
+  # these row names are not what 'where' refers to
+  rownames_to_column('junk') %>%
+  # THESE are the cluster numbers
+  rownames_to_column('cluster') %>%
+  mutate(cluster = as.factor(cluster)) %>%
+  # don't need the useless numbers
+  ## or yval2
+  select(!(junk)) %>%
+  select(!(yval2))
+
+
+## match up cluster numbers to latitude bins
+biv_bin_clust <- as.data.frame(biv_mvpart$where) %>%
+  rename(cluster = `biv_mvpart$where`) %>%
+  mutate(cluster = as.factor(cluster)) %>%
+  rownames_to_column('bin_index') %>%
+  left_join(bins) %>%
+  right_join(biv_mvpart_data) %>%
+  filter(!(is.na(bin_index))) %>%
+  #  remove redundant columns
+  select(!(c(ncompete, nsurrogate, var)))
+
+write.csv(biv_bin_clust, file = here('data', 'processeddata', '20220926_mcart-cluster_bivalves.csv'))
+  
+# now extract tree information for plotting
+# we need to cycle the data through packages to convert the information
+# first data.tree, convert rpart object to data.tree object
+biv_node <-as.Node(biv_mvpart)
+# data.tree to convert data.tree to phylo for ape
+biv_phylo <- as.phylo.Node(biv_node)
+# ape to save tree
+write.tree(biv_phylo, file = here('data', 'processeddata', '20220926_mcart-cluster_bivalves.tre'))
 ```
 
 
-testing
-```{r cluster}
-biv_fit <- hclust(biv_jaccard, method = 'average')  #change cluster method
-#mifish_clust <- cutree(mifish_fit, 4)  # change number of clusters
-
-
-plot(biv_fit)
+Export a png of the pca for now
+```{r pca}
+png(filename = here('output', 'clustering', '20220926_bivalve_pca.png'), type = 'quartz')
+rpart.pca(biv_mvpart)
+dev.off()
 ```

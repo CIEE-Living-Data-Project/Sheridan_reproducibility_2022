@@ -5,31 +5,36 @@ date: "9/22/2022"
 output: html_document
 ---
 
+# IMPORTANT NOTE
+Key package mvpart is not currently available on cran and needs to be installed from the archives. Use devtools to install!
 
+# Overview
+
+This script does the following:
+1) loads in only the class needed, identified to species, within a buffer around the study range
+2) Generate range-through data
+3) Use range-through to map species presence in 1-degree bins across their range
+4) Generate dissimilarity matrix from presence data
+5) Visualize with nMDS
+6) Run mCART (Multivariate Classification and Regression Tree) on dissimilarity matrix vs latitude to determine splitting between regions; note that in this version of the analysis no environmental data has been provided to the analysis, clusters are formed based only on community P/A data. next iteration will include environmental variables. (No time to get those also tidied up in time for the project!)
+7) export results in a plottable format
+
+# Setup
 
 ```{r setup, include=FALSE}
-## check which of these will work best
-#install.packages('rpart')
+# mvpart needs to be installed from CRAN archives
 #devtools::install_github("cran/mvpart")
-#install.packages('tree')
-
-# which?
-#library(ggtree)
-# can't do multivariate?
-library(rpart)
-# from archives
 library(mvpart)
-library(tree)
 
+#install.packages('data.tree')
+library(data.tree)
 
-# packages I know I'll need
 library(tidyverse)
 library(stringr)
 library(ggplot2)
 library(vegan)
-library(phytools)
+library(ape)
 library(here)
-
 
 ```
 
@@ -37,8 +42,10 @@ library(here)
 # only polychaetes a bit outside study range
 poly <- read_csv(here('data', 'rawdata',
                             '20220909_obis-gbif_bivalve-polychaete-subset.csv')) %>%
+  # only polychaetes ID to species
   filter(class == "Polychaeta") %>%
   filter(rank == 'species') %>%
+  # within latitude requirements
   filter(decimal_latitude > 25) %>%
   filter(decimal_latitude < 65)
 
@@ -47,6 +54,10 @@ poly <- read_csv(here('data', 'rawdata',
 # Format data for analysis
 
 ## Range-through
+
+Following Fenberg et al 2015 and 2019, I generate my matrix based on the minimum and maximum latitude of species occurrence, rather than Presence-Absence within each 1-degree bin. 
+At this point I filter to only the species found within our study range: 455 Polychaete species
+
 ```{r rangethrough}
 # generate min and max ranges
 poly_rt <- poly %>%
@@ -56,23 +67,30 @@ poly_rt <- poly %>%
   filter(max_lat >= 30 & max_lat <= 63) %>%
   rownames_to_column('index')
 
+# write if needed
+#write.csv(poly_rt, here('data', 'processeddata', '20220926_range-through_polychaete.csv'))
+
 # make bins
 # 32 1 degree latitude bins from 30-62N
-bins <- data.frame(min = seq(30:61) + 29, max = seq(30:61) + 30)
+bins <- data.frame(min = seq(30:61) + 29, max = seq(30:61) + 30) %>%
+  rownames_to_column('bin_index')
 
 #define binning function
+## if the minimum latitude and maximum latitude permit the species to be in the bin,
+## presence, else, absence.
 bin_fun <- function(min_lat, max_lat, min, max){
   col <- ifelse((min_lat <= max & max_lat >= min), 1, 0)
   x <- as.data.frame(col)
 }
 
 # taxa P/A for bins
+# Use purrr to run function on all species and bind resulting columns
 poly_bin <- map2_dfc(poly_rt$min_lat, poly_rt$max_lat, bins$min, bins$max, .f = bin_fun)
 
 # fix up to be usable
-poly_bin2 <- poly_bin %>%
-  # column for which bin
-  mutate(bin_lat = seq(30:61) +29) %>%
+poly_bin <- poly_bin %>%
+  # column for 'which bin'
+  mutate(bin_lat = seq(30:61) + 29) %>%
   relocate(bin_lat) %>%
   # remove extra letters in names
   rename_with(., ~ str_remove_all(., 'col\\.\\.\\.')) %>%
@@ -82,25 +100,123 @@ poly_bin2 <- poly_bin %>%
   select(!(c(index, min_lat, max_lat))) %>%
   #format into site x species P/A matrix
   pivot_wider(id_cols = bin_lat, names_from = worms_sciname) %>%
+  # future analysis needs matrix only with rownames
   column_to_rownames('bin_lat')
 
 ```
 
 
-## Dissimilarity matrix
 
-```{r dissimilarity}
+
+## nMDS
+
+Ordination for community data
+Jaccard dissimilarity for P/A data
+Extract plot
+
+```{r nmds}
+#run the ordination
+poly_nmds <- poly_bin %>%
+  #run ordination
+  metaMDS(.,
+          distance = "jaccard",
+          k = 2,
+          trymax = 5000)
+
+
+# check stress
+stressplot(poly_nmds)
+
+#extract from NMDS
+poly_nmds_scores <- as.data.frame(poly_nmds$points) %>%
+  rownames_to_column(var = "lat_bin") 
+
+# keeping the ordination simple
+# we can see the latitudinal pattern
+ggplot(poly_nmds_scores) +
+  geom_point(aes(x = MDS1, y = MDS2, col = lat_bin)) +
+  theme_bw()
+
+
+ggsave(here('output', 'clustering', '20220926_nmds_polychaetes.png'))
+```
+
+
+
+## mCART
+
+Use vegan to generate distance matrix using Jaccard for P/A data.
+mvpart for mCART. 1se recommended for parsimony.
+
+```{r}
 # Jaccard distance
-poly_jaccard <- vegdist(poly_bin2, method = 'jaccard', binary = T)
+poly_jaccard <- vegdist(poly_bin, method = 'jaccard', binary = T)
+
+poly_mvpart <- mvpart(as.matrix(poly_jaccard) ~ min,
+                      # distance matrix vs latitude bins
+                      data = bins,
+                      # select minimum tree
+                      ## within one standard error
+                      xv = '1se',
+                      # cross validation settings
+                      xval = nrow(bins),
+                      xvmult = 100,
+                      # also plot PCA
+                      pca = T,
+                      # also plot rsquare plot
+                      rsq = T
+                      )
+summary(poly_mvpart)
+
+# tear apart the object and reconstruct it
+# because mvpart is deprecated we need to manually extract
+## the useful parts of the output for full control over plotting
+
+poly_mvpart_data <- as.data.frame(poly_mvpart$frame) %>%
+  # these row names are not what 'where' refers to
+  rownames_to_column('junk') %>%
+  # THESE are the cluster numbers
+  rownames_to_column('cluster') %>%
+  mutate(cluster = as.factor(cluster)) %>%
+  # don't need the useless numbers
+  ## or yval2
+  select(!(junk)) %>%
+  select(!(yval2))
+
+
+## match up cluster numbers to latitude bins
+poly_bin_clust <- as.data.frame(poly_mvpart$where) %>%
+  rename(cluster = `poly_mvpart$where`) %>%
+  mutate(cluster = as.factor(cluster)) %>%
+  rownames_to_column('bin_index') %>%
+  left_join(bins) %>%
+  right_join(poly_mvpart_data) %>%
+  filter(!(is.na(bin_index))) %>%
+  #  remove redundant columns
+  select(!(c(ncompete, nsurrogate, var)))
+
+write.csv(poly_bin_clust, file = here('data', 'processeddata', '20220926_mcart-cluster_polychaete.csv'))
+  
+# now extract tree information for plotting
+# we need to cycle the data through packages to convert the information
+# first data.tree, convert rpart object to data.tree object
+poly_node <-as.Node(poly_mvpart)
+# data.tree to convert data.tree to phylo for ape
+poly_phylo <- as.phylo.Node(poly_node)
+# ape to save tree
+write.tree(poly_phylo, file = here('data', 'processeddata', '20220926_mcart-cluster_polychaete.tre'))
+
 ```
 
-test
-```{r cluster}
-poly_fit <- hclust(poly_jaccard, method = 'average')  #change cluster method
-#mifish_clust <- cutree(mifish_fit, 4)  # change number of clusters
 
 
-plot(poly_fit)
+
+
+
+Export a png of the pca for now
+```{r pca}
+png(filename = here('output', 'clustering', '20220926_polychaete_pca.png'), type = 'quartz')
+rpart.pca(poly_mvpart)
+dev.off()
 ```
-
 
