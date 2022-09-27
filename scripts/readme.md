@@ -9,3 +9,4 @@ Scripts are in order of use
 02: richness maps: shows initial mapping of species in study area
 
 03: biogeographic breaks: includes setup for mCART, visualization of range-through, and mCART
+At this point, scripts are broken into a and b for each class: polychaete and bivalves
