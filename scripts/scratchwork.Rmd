@@ -1,0 +1,149 @@
+---
+title: "scratch"
+author: "Kate Sheridan"
+date: "9/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(tree)
+# can't do multivariate?
+library(rpart)
+
+library(recluster)
+```
+
+```{r tree}
+test_matrix <- as.matrix(poly_jaccard)
+
+poly_tree <- tree(min ~ as.matrix(poly_jaccard),
+                  data = bins)
+
+plot(poly_tree)
+
+poly_tree <- tree(min ~ as.matrix(poly_jaccard),
+                  data = bins)
+
+poly_tree
+summary(poly_tree)
+
+ir.tr <- tree(Species ~., iris)
+ir.tr
+summary(ir.tr)
+```
+
+test
+```{r cluster}
+poly_fit <- hclust(poly_jaccard, method = 'average')  #change cluster method
+#mifish_clust <- cutree(mifish_fit, 4)  # change number of clusters
+
+
+plot(poly_fit)
+```
+
+```{r rvpart}
+library(ipred)
+
+set.seed(123)
+
+bagged_test <- bagging(formula = min ~ as.matrix(poly_jaccard),
+                       data = bins,
+                       coob = TRUE)
+
+
+
+print(bagged_test)
+predict(bagged_test)
+
+library(caret)
+
+
+#poly_rvpart <- rpart(as.matrix(poly_jaccard)~.,)
+
+
+```
+
+
+This uses the distance weighted averages; similar to blanchette 2008
+
+```{r}
+
+# however we can use generated distance matrices to assess the matrices before running the analysis
+# recluster hist and node strength
+recluster.hist(poly_jaccard)
+recluster.node.strength(poly_jaccard)
+
+set.seed(616)
+# note most of these settings are default
+# consensus tree of 100 trees
+poly_upgma <- recluster.cons(poly_bin2, 
+                              dist = 'jaccard', 
+                              method = 'average',
+                              tr = 500,
+                              p = .6)
+
+#basic look
+plot(poly_upgma$cons, direction = 'downwards', cex = .5)
+
+#multi does the bootstrap at multiple levels 
+## change in value is what's important, not the number itself 
+poly_upgma_multi <- recluster.multi(poly_upgma$cons, poly_bin2,
+                                      dist = 'jaccard',
+                                      method = 'average',
+                                      levels = 3
+                                      )
+
+# plots fast growing/strong nodes in black and slow/weak in red
+# object$scale shows the level to use to identify these nodes
+poly_id <- recluster.identify.nodes(poly_upgma_multi)
+
+
+
+recluster.plot(poly_upgma$cons, poly_upgma_multi, direction = 'downwards',
+               # which levels to label nodes with
+               1, 2, 
+               id = mifish_id$nodes
+               )
+
+
+# looking at cuts
+# expldiss shows cluster attribution for each cut, 
+## explained dissimilarity, and resulting clusters, so we can pick:
+# pick cut that represents > 90% dissimilarity ($expl.div)
+#NOTE: identical before and after polytomies
+poly_expldiss <- recluster.expl.diss(poly_upgma$cons, poly_jaccard)
+
+poly_expldiss
+
+# extracting group identities from matrix at chosen cut (column)
+poly_clusters <- poly_expldiss$matrix[,2] %>%
+  as.data.frame()
+
+
+# combining with PCoA
+# run PCoA
+poly_pcoa <- pcoa(poly_jaccard)
+#extract coordinates
+poly_pcoa_plot <- as.data.frame(poly_pcoa$vectors) %>% 
+  janitor::clean_names() %>%
+  select(axis_1, axis_2) %>%
+  rownames_to_column('lat_bin')
+
+
+# prepare to plot
+# combine cluster identities with PCoA axes and metadata
+poly_plot <- poly_clusters %>%
+  rename(cluster = '.') %>%
+  rownames_to_column('lat_bin') %>%
+  left_join(poly_pcoa_plot) 
+
+#stick basic PCoA with colos from group identities
+ggplot(poly_plot) +
+  geom_point(aes(x = axis_1, y = axis_2, 
+                 col = as.factor(cluster)
+                 )
+             ) +
+  theme_bw()
+
+```
