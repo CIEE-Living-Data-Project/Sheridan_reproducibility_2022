@@ -5,23 +5,74 @@ date: "9/27/2022"
 output: html_document
 ---
 
-This script will make neat maps from the clusters!
+This script will make neat maps from the clusters and visualize the ranges!
 
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(ggplot2)
+# i will use ggtree ultimately
+#library(ggtree)
+library(ggnewscale)
 library(ape)
 library(here)
+
+# set up palettes for consistency
+# 3,5,6,9,10,11 polychaetes
+# 8,7,4,5,10,11 bivalves
+### cluster equivalencies; P6 = B8, P5 = B7, P9 = B5, P3 = B4
+biv_cluster_pal <- c('4' = '#d1d39b',  # neutral yellow
+               '5' = '#bac9dd', #light blue 
+               '7' = '#93bf6e', # yellow green 
+              '8' = '#628e3d',  # darker green              
+               '10' =  '#688ab5', #medium blue
+              '11' = '#2a3e57' #darkest blue
+              )
+
+poly_cluster_pal <- c('3' = '#d1d39b',  # neutral yellow
+               '5' = '#93bf6e', # yellow green 
+               '6' = '#628e3d',  # darker green
+               '9' = '#bac9dd', #light blue 
+               '10' =  '#688ab5', #medium blue
+              '11' = '#2a3e57' #darkest blue
+              )
 ```
 
 ```{r load-in}
+# range-through, cluster data, cluster tree, occurrences
 poly_rt <- read_csv(here('data', 'processeddata', '20220926_range-through_polychaete.csv'))[-1]
 poly_clust <- read_csv(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.csv'))[-1]
 poly_tree <- read.tree(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.tre'))
+# filter occurrences a priori
+poly <- read_csv(here('data', 'rawdata',
+                            '20220909_obis-gbif_bivalve-polychaete-subset.csv')) %>%
+  filter(class == "Polychaeta") %>%
+  # trim to study range
+  filter(decimal_latitude > 30 & decimal_longitude < -116.4) %>%
+  filter(decimal_latitude < 63 & decimal_longitude > -142.5) %>%
+  filter(rank == 'species') %>%
+  select(worms_sciname, decimal_latitude, decimal_longitude, 
+         class, subclass, order, family, genus) %>%
+    distinct()
+
+
 
 biv_rt <-  read_csv(here('data', 'processeddata', '20220926_range-through_bivalve.csv'))[-1]
 biv_clust <- read_csv(here('data', 'processeddata', '20220926_mcart-cluster_bivalves.csv'))[-1]
 biv_tree <- read.tree(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.tre'))
+biv <- read_csv(here('data', 'rawdata',
+                            '20220909_obis-gbif_bivalve-polychaete-subset.csv')) %>%
+  filter(class == "Bivalvia") %>%
+  # trim to study range
+  filter(decimal_latitude > 30 & decimal_longitude < -116.4) %>%
+  filter(decimal_latitude < 63 & decimal_longitude > -142.5) %>%
+  filter(rank == 'species') %>%
+  select(worms_sciname, decimal_latitude, decimal_longitude, 
+         class, subclass, order, family, genus) %>%
+  distinct()
+
+
+# world map
+world <- map_data("world")
 ```
 
 
@@ -102,4 +153,204 @@ ggplot(biv_rt) +
 ggsave(here('output', 'sp_range', '20220926_minmax-box_bivalves.png'))
 ```
 
+
+
+
+# Mapping
+
+```{r prepare-to-map}
+## Polychaetes
+poly_clust2 <- poly_clust %>%
+  group_by(cluster) %>%
+  summarise(min_lat_clust = min(min), max_lat_clust = max(max))
+
+poly2 <- poly %>%
+  left_join(poly_rt) %>%
+  filter(!(is.na(min_lat))) %>%
+  mutate(in_cluster = ifelse((decimal_latitude >= 30 & 
+                                decimal_latitude <= 32), 6, ifelse((decimal_latitude >= 32 & 
+                                decimal_latitude <= 37), 5, ifelse((decimal_latitude >= 37 & 
+                                decimal_latitude <= 49), 3, ifelse((decimal_latitude >= 49 & 
+                                decimal_latitude <= 55), 9, ifelse((decimal_latitude >= 55 & 
+                                decimal_latitude <= 60), 10, ifelse((decimal_latitude >= 60 & 
+                                decimal_latitude <= 62), 11, NA_character_)))))))
+
+
+
+## Bivalves
+
+biv_clust2 <- biv_clust %>%
+  group_by(cluster) %>%
+  summarise(min_lat_clust = min(min), max_lat_clust = max(max))
+
+biv2 <- biv %>%
+  left_join(biv_rt) %>%
+  filter(!(is.na(min_lat))) %>%
+  mutate(in_cluster = ifelse((decimal_latitude >= 30 & 
+                                decimal_latitude <= 32), 8, ifelse((decimal_latitude >= 32 & 
+                                decimal_latitude <= 35), 7, ifelse((decimal_latitude >= 35 & 
+                                decimal_latitude <= 48), 4, ifelse((decimal_latitude >= 48 & 
+                                decimal_latitude <= 55), 5, ifelse((decimal_latitude >= 55 & 
+                                decimal_latitude <= 60), 10, ifelse((decimal_latitude >= 60 & 
+                                decimal_latitude <= 62), 11, NA_character_)))))))
+```
+
+
+## Visualize mCART results
+
+### Polychaetes separately
+
+Update with tree labeled and colored when internet
+
+numbers on tree:
+.9096 = 11
+.7919 = 10
+.6395 = 9
+.1483 = 6
+.7853 = 5
+.2377 = 3
+```{r}
+plot(poly_tree)
+
+```
+
+
+
+
+```{r polychaete map}
+
+ggplot() + geom_map(data = world, 
+                    map = world, 
+                    aes(x = long, y = lat, map_id = region), 
+                    fill = "grey80") +
+  geom_point(data = poly2, aes(x = decimal_longitude, y = decimal_latitude,
+                               color = as.factor(in_cluster)),
+             alpha = .5) +
+  geom_point(data = poly_clust, aes(x = -137, y = min,  fill = as.factor(cluster)),
+             shape = 23,
+             size = 4) +
+  scale_color_manual(values = poly_cluster_pal) +
+  scale_fill_manual(values = poly_cluster_pal) +
+    xlim(-142.5, -116.4) + 
+  ylim(30, 62) +
+  coord_fixed() +
+  theme_bw() +
+  labs(title = 'Polychaete clusters') +
+  theme(axis.title = element_blank(),
+        legend.position = 'none',
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+ggsave(here('output', 'maps', '20220927_cluster-map_polychaetes.png'),
+       width = 6, height = 7)
+```
+
+
+
+## Bivalves
+
+
+note: accidentally saved the same tree twice, rerun when I have internet.
+
+```{r}
+plot(biv_tree)
+```
+
+
+
+```{r}
+## basic map
+ggplot() + geom_map(data = world, 
+                    map = world, 
+                    aes(x = long, y = lat, map_id = region), 
+                    fill = "grey80") +
+  geom_point(data = biv2, aes(x = decimal_longitude, y = decimal_latitude,
+                              color = as.factor(in_cluster)),
+             alpha = .5) +
+  geom_point(data = biv_clust, aes(x = -137, y = min,  fill = as.factor(cluster)),
+             shape = 24,
+             size = 4) +
+  scale_color_manual(values = biv_cluster_pal) +
+  scale_fill_manual(values = biv_cluster_pal) +
+    xlim(-142.5, -116.4) + 
+  ylim(30, 62) +
+  coord_fixed() +
+  labs(title = 'Bivalve Clusters') +
+  theme_bw() +
+  theme(axis.title = element_blank(),
+        legend.position = 'none',
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+ggsave(here('output', 'maps', '20220927_cluster-map_bivalves.png'),
+       width = 6)
+```
+
+## Together
+
+```{r}
+
+## basic map
+ggplot() + geom_map(data = world, 
+                    map = world, 
+                    aes(x = long, y = lat, map_id = region), 
+                    fill = "grey80") +
+  geom_point(data = poly_clust, aes(x = -137, y = min,  
+                                    fill = as.factor(cluster)),
+             shape = 23,
+             size = 4) +
+  scale_fill_manual(values = poly_cluster_pal) +
+  new_scale_fill()+
+  geom_point(data = biv_clust, aes(x = -135, y = min,  
+                                   fill = as.factor(cluster)),
+             shape = 24,
+             size = 4) +
+  scale_fill_manual(values = biv_cluster_pal) +
+    xlim(-140, -116.4) + 
+  ylim(30, 62) +
+  coord_fixed() +
+  theme_bw() +
+  theme(axis.title = element_blank(),
+        legend.position = 'none',
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+ggsave(here('output', 'maps', '20220927_cluster-map_bins.png'),
+       width = 6, height = 7)
+
+```
+
+
+
+
+
+
+```{r}
+#this was the ggtree version
+
+ggtree(coi_cons) %>%
+  # move pelagic to the top
+  flip(52, 32) %>% 
+  flip(27, 31) %>%
+  flip(29, 30) %<+%
+  # add labels and coloring to ggtree
+  coi_subset_plot +
+  geom_tree(aes(color=as.factor(cluster))) +
+  geom_text(aes(color = site, label= habitat_plot), 
+            # slightly off the tips
+            position = position_nudge(x = .005, y = 0),
+            # left justify
+            hjust=0, 
+            size=3) +
+  scale_colour_manual(values = site_pal) +
+    # adding colors to branches AND tip labels means they get added to the color palette
+  # need enough colors for all options
+  #scale_color_manual(values = c('blue', 'black', 'grey40', 'green', 'orange',
+  #                              'red', 'steelblue', 'skyblue', 'yellow', 'chartreuse',
+  #                              'cyan', 'darkkhaki', 'darkorchid', 'aquamarine', 'deepskyblue',
+  #                              'darkolivegreen3', 'deeppink1')) +
+  # adjust xlim to fit text
+  xlim(0, .5) +
+  theme(legend.position = 'none')
+```
 

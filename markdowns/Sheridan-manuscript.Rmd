@@ -19,20 +19,69 @@ output: pdf_document
 # generate bibliography for packages used
 #remotes::install_github("Pakillo/grateful")
 library(grateful)
-get_pkgs_info(pkgs = c('rgbif', 'robis', 'worrms'))
+get_pkgs_info(pkgs = c('rgbif', 'robis', 'worrms'.
+                       'raster', 'speciesgeocodeR', 'vegan'))
 ```
 
-# Abstract
+## Abstract
 
-# Introduction
+## Introduction
 
-# Methods
+There is a lot of marine diversity along the Pacific coast of North America. The rocky intertidal has been studied intensively throughout recent history. Animals that live there are the livelihood of many coastal communities, either as food or tourist attractions. Additionally, the Northeast Pacific has been identified as a climate change corridor as species respond to warming oceans by moving towards more favorable habitats.
+
+The biogeography of the coastal fauna has been studied in several ways. There are long term surveys, but these are restricted to specific locations as they require setting up a long term transect along flat rocks. This means regions such as British Columbia's fjords are undersampled as habitats that meet the requirements can be difficult, dangerous, or expensive to get to. More recently, biogeographic analyses based on publicly available biodiversity data have identified marine ecoregions throughout the globe. However, these analyses are limited by the biases in the data that they scrape from the public databases. Designing a survey that can overcome limitations of traditional sampling methods and help supplement regions that are missing data can improve our ability to monitor the changes that are already occurring.
+
+A method that shows great promise in this respect is environmental DNA (eDNA). For the past two years, the Pacific eDNA Coastal Observatory (PECO) has sampled eDNA from seagrass beds from San Diego, California to Juneau, Alaska. The first round of data is on the sequencer this month and two chapters of my thesis involve the analysis of this data. So I am using this project to work on developing scripts that will eventually be adapted for the biodiversity data from the eDNA samples, and comparing them to analyses performed on biodiversity data from global repositories.
+
+I identified two classes of marine invertebrates (Polychaetes and Bivalves) that would serve as a solid foundation for testing some of the methods I will eventually use. I looked at the data with simple species richness maps. Then I tried multivariate classification and regression trees (mCART) as implemented in (fenberg 2015 cite) to identify biogeographic breaks. I expected the methods to return concordant results and they did: preliminary analysis recovered 6 biogeographic regions for both Polychaetes and Bivalves. (write about which ones here)
+
+## Methods
+
+*Selection of taxa*
+
+(write about why i selected each one here)
+
+*Data collection*
 
 Data were downloaded from the Global Biodiversity Information Framework (GBIF) and the Ocean Biodiversity Information System (OBIS) on September 9th, 2022 using rgbif [@rgbif2022] and robis [@robis] respectively. Queries included a polygon for the North and Central American Pacific coastline from Alaska to the Equator, and restricted to 6 bivalve families and 11 polychaete families (Appendix). Families were selected for their prevalence in existing eDNA data.
 
 GBIF data were cleaned by removing high levels of coordinate uncertainty (100 meters of uncertainty for every 1000 meters), removing fossils and machine observations, removing individual counts of 0, removing records with only a family level id, then standardizing taxonomy to match the World Register of Marine Species (WoRMS) [@worms_editorial_board_world_2022].
 
-# References
+(insert number of records and species etc)
+
+*Richness maps*
+
+Species richness was mapped separately for polychaetes and bivalves using the 'RichnessGrid' function of the package speciesgeocodeR (cite) in R.
+
+*Biogeographic breaks*
+
+Following Fenberg et al 2015 and 2019 (citations), I used range-through to determine species presence in each 1 degree of latitude bin. I identified the minimum and maximum latitude occurrence of the species and filled the bins between those occurrences with 'presence'. As Fenberg argues, this method to determine presence-absence is an improvement to strictly using the occurrence records as it helps to overcome missing data. Missing data, especially for for marine invertebrate species, is a problem that cannot be understated. Additionally, In Fenberg 2015, there was no real difference between results generated using range-through or occurrence records.
+
+At this point I filter to only the species found within a our study area: 455 polychaete species and 144 bivalve species, and allow a buffer of about 1.5 degrees in each direction to allow for the possibility that a species might have a record slightly below or above the study area but a missing record at the edge.
+
+Then I generated a dissimilarity matrix for each class separately using Jaccard distances, for presence-absence. I visualized the communities for each latitudinal bin with nMDS using the command metaMDS from vegan (citation). Multivariate classification and regression trees (mCART) were then run on the distance matrix vs latitude with the command mvpart from the package mvpart (citation) in R with cross validation set at the minimum tree above 1 standard error, with the option to run a PCA with the results enabled.
+
+## Results
+
+(insert richness map)
+
+The richness map demonstrated the highest levels of species for both classes richness around cities, as expected from public repository data.
+
+(insert nmds)
+
+The nMDS demonstrated demonstrating communities diverging with latitude for both classes.
+
+(insert trees with map figure)
+
+Both classes formed 6 clusters, with the primary split between northernmost and southernmost clusters occurring at the Pacific (current name, ugh I forget). The exact latitudinal position of the cluster boundaries do not entirely match, however. For bivalves, the classic break at Point Conception (\~35N) is recovered, but not for polychaetes.
+
+(insert map figures)
+
+## Discussion
+
+The results were generally in agreement with Fenberg et al (cite), with 5 biogeographic breaks identified, forming 6 clusters. However, the breaks were not in the same locations. Partly, this is explained by their finding that different forms of larval development demonstrate alternate patterns. Bivalves strongly resemble their direct development map, with breaks at Point Conception and around San Juan Strait (correct name?)
+
+## References
 
 ::: {#refs}
 :::

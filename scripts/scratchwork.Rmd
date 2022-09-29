@@ -147,3 +147,15 @@ ggplot(poly_plot) +
   theme_bw()
 
 ```
+
+
+```{r}
+# for some reason this doesn't do the whole dataframe, only part of it
+poly2 <- poly %>%
+  left_join(poly_rt) %>%
+  filter(!(is.na(min_lat))) #%>%
+  mutate(in_cluster = ifelse((decimal_latitude >= poly_clust2$min_lat_clust & 
+                                decimal_latitude <= poly_clust2$max_lat_clust), 
+                             poly_clust2$cluster, NA_character_))
+```
+
