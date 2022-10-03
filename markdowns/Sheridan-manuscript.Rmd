@@ -1,6 +1,16 @@
 ---
 title: "Exploring Polychaete and Bivalve biogeography along the Pacific Coast of North America"
-author: "Kate Sheridan"
+author:  Kate Sheridan^[McGill University, kate.sheridan@mail.mcgill.ca]
+address:
+  - code: McGill University
+    address: Biology Department, 1205 Av. du Docteur-Penfield, Montreal, QC H3A 1B1, Canada
+    
+abstract: I used data from GBIF and OBIS to determine biogeographic breaks for Polychaetes and Bivalves.
+
+keywords:
+  - biogeography
+  - marine invertebrates
+  
 date: "9/15/2022"
 
 geometry:  margin=1in
@@ -16,6 +26,8 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
+# distill for author info
+#install.packages('distill')
 # generate bibliography for packages used
 #remotes::install_github("Pakillo/grateful")
 library(grateful)
@@ -25,8 +37,6 @@ get_pkgs_info(pkgs = c('rgbif', 'robis', 'worrms',
                        'ggplot2', 'ggnewscale',
                        'here', 'tidyverse', 'janitor'))
 ```
-
-## Abstract
 
 ## Introduction
 
@@ -42,15 +52,21 @@ I identified two classes of marine invertebrates (Polychaetes and Bivalves) that
 
 *Selection of taxa*
 
-(write about why i selected each one here)
+This project focuses on a subset of families from two classes of marine invertebrates: Bivalves and Polychaetes.
+
+Taxa were selected through analysis of a previous eDNA dataset from Calvert Island, BC. These data contained seagrass, kelp, and rocky bottom samples, amplified for COI and filtered to marine invertebrates. I identified generic and species-level assignments that were unique to seagrass samples, and determined which taxa were most abundant in terms of unique species assignments and unique genetic sequences.
+
+Polychaetes had the most species recovered, no matter how the data was grouped. Bivalves, specifically the species *Kurtiella tumida*, had the most unique genetic sequences in most samples, but especially in seagrass samples. However, as bivalves and polychaetes are very large classes with incredible levels of diversity, I restricted the taxonomic query to only families found in our environmental DNA dataset. Databases for assigning taxonomic identifications to genetic data are also notoriously incomplete for invertebrates, so selecting only the species identified in the eDNA samples filters to species that were in the database rather than a biologically meaningful subset. Increasing the query to the family level allows for closely related species and genera absent from the database to be recovered in big data occurrence records while still targeting the search towards the taxa that we found to be highly detectable with eDNA.
+
+However, as the taxa were selected using a temperate dataset, I expect some of the analyses to contradict the expected latitudinal diversity gradient. As the search was run at the family, level this allows for subtropical species not present in our temperate dataset to be found, but it does not allow for subtropical and tropical families that may occupy similar functional groups in seagrass habitats but are absent in temperate latitudes.
+
+As our first round of data from PECO will be fish, selecting invertebrates for this project will allow development of scripts without setting specific expectations for the data to come.
 
 *Data collection*
 
-Data were downloaded from the Global Biodiversity Information Framework (GBIF) and the Ocean Biodiversity Information System (OBIS) on September 9th, 2022 using rgbif [@rgbif2022] and robis [@robis] respectively. Queries included a polygon for the North and Central American Pacific coastline from Alaska to the Equator, and restricted to 6 bivalve families and 11 polychaete families (Appendix). Families were selected for their prevalence in existing eDNA data.
+Data were downloaded from the Global Biodiversity Information Framework (GBIF) and the Ocean Biodiversity Information System (OBIS) on September 9th, 2022 using rgbif [@rgbif2022] and robis [@robis] respectively. Queries included a polygon for the North and Central American Pacific coastline from Alaska to the Equator, and restricted to 6 bivalve families and 11 polychaete families (Appendix). Families were selected for their prevalence in existing eDNA data. There were 85,789 GBIF records and 25,914 OBIS records in the raw dataset.
 
-GBIF data were cleaned by removing high levels of coordinate uncertainty (100 meters of uncertainty for every 1000 meters), removing fossils and machine observations, removing individual counts of 0, removing records with only a family level id, then standardizing taxonomy to match the World Register of Marine Species (WoRMS) [@worms_editorial_board_world_2022] using the worrms package [@worrms].
-
-(insert number of records and species etc)
+GBIF data were cleaned by removing high levels of coordinate uncertainty (100 meters of uncertainty for every 1000 meters), removing fossils and machine observations, removing individual counts of 0, removing records with only a family level id, then standardizing taxonomy to match the World Register of Marine Species (WoRMS) [@worms_editorial_board_world_2022] using the worrms package [@worrms]. After cleaning, there were 38,423 GBIF and 18,591 OBIS records.
 
 *Richness maps*
 
@@ -78,12 +94,16 @@ Both classes formed 6 clusters, with the primary split between northernmost and 
 
 The results were generally in agreement with @fenberg_biogeographic_2015, with 5 biogeographic breaks identified, forming 6 clusters. However, the breaks were not in the same locations. Partly, this is explained by their finding that different forms of larval development demonstrate alternate patterns. Bivalves strongly resemble their direct development map, with breaks at Point Conception and around Strait of Juan de Fuca. However, most bivalves have free swimming planktonic larvae.
 
+\newpage
+
 ## References
 
 ::: {#refs}
 :::
 
-# Figures
+\newpage
+
+# Figures 
 
 ![Polychaete species richness map](images/20220924_polychaete_richness.png){width="300"} ![Bivalve richness map](images/20220924_bivalve_richness.png){width="300"}
 
@@ -104,6 +124,8 @@ Figure 3. Polychaete and bivalve species occurrences by minimum and maximum lati
 ![](images/20220927_cluster-map_bins.png){width="326"}
 
 Figure 4. a) Polychaete clusters. Polychaete occurrence data along coast, diamonds represent 1 degree bins both colored by cluster. b) Bivalve clusters. Bivalve occurrence data along coast, triangles represent 1 degree bins both colored by cluster. c) Comparison of polychaete bin cluster identities (diamonds) to bivalve bin cluster identities (triangles)
+
+\newpage
 
 # Appendix
 
