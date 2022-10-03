@@ -10,8 +10,7 @@ This script will make neat maps from the clusters and visualize the ranges!
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(ggplot2)
-# i will use ggtree ultimately
-#library(ggtree)
+library(tidytree)
 library(ggnewscale)
 library(ape)
 library(here)
@@ -58,7 +57,7 @@ poly <- read_csv(here('data', 'rawdata',
 
 biv_rt <-  read_csv(here('data', 'processeddata', '20220926_range-through_bivalve.csv'))[-1]
 biv_clust <- read_csv(here('data', 'processeddata', '20220926_mcart-cluster_bivalves.csv'))[-1]
-biv_tree <- read.tree(here('data', 'processeddata', '20220926_mcart-cluster_polychaete.tre'))
+biv_tree <- read.tree(here('data', 'processeddata', '20220926_mcart-cluster_bivalves.tre'))
 biv <- read_csv(here('data', 'rawdata',
                             '20220909_obis-gbif_bivalve-polychaete-subset.csv')) %>%
   filter(class == "Bivalvia") %>%
@@ -200,7 +199,7 @@ biv2 <- biv %>%
 
 ### Polychaetes separately
 
-Update with tree labeled and colored when internet
+Note; still some issues here so I'm skipping this output for the project.
 
 numbers on tree:
 .9096 = 11
@@ -209,8 +208,39 @@ numbers on tree:
 .1483 = 6
 .7853 = 5
 .2377 = 3
-```{r}
-plot(poly_tree)
+```{r presentation-version trees, eval=FALSE, include=FALSE}
+poly_newlabels <- poly_clust %>%
+  mutate(label = signif(dev, digits = 4)) %>%
+  select(cluster, label) %>%
+  distinct() %>%
+  mutate(label2 = as.character(label))
+
+
+
+# use ggtree
+poly_tree2 <- as.tibble(poly_tree) %>%
+  left_join(poly_newlabels) %>%
+  mutate(cluster = as.character(cluster)) %>%
+  mutate(label2 = coalesce(cluster,label)) %>%
+  select(!(c(label, cluster))) %>%
+  rename(label = label2)
+
+poly_tree2 <- as.phylo(poly_tree2)
+
+
+poly_ggtree <- ggtree(poly_tree2) 
+
+
+
+
+poly_ggtree + geom_tiplab() + 
+  # temp check for flipping
+  #geom_text(aes(label = node)) +
+  scale_color_manual(values = poly_cluster_pal)
+  
+poly_ggtree3 <- ggtree(poly_tree2) 
+poly_ggtree3 %<+% poly_clust + geom_tiplab(aes(color = as.factor(cluster))) + scale_color_manual(values = poly_cluster_pal)
+  
 
 ```
 
@@ -250,10 +280,10 @@ ggsave(here('output', 'maps', '20220927_cluster-map_polychaetes.png'),
 ## Bivalves
 
 
-note: accidentally saved the same tree twice, rerun when I have internet.
 
 ```{r}
 plot(biv_tree)
+
 ```
 
 
