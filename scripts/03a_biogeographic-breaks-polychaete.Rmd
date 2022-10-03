@@ -26,12 +26,16 @@ This script does the following:
 #devtools::install_github("cran/mvpart")
 library(mvpart)
 
+# install any other packages you don't have
 #install.packages('data.tree')
-library(data.tree)
+#install.packages('vegan')
+#install.packages('ape')
+#install.packages('stringr')
 
 library(tidyverse)
 library(stringr)
 library(ggplot2)
+library(data.tree)
 library(vegan)
 library(ape)
 library(here)

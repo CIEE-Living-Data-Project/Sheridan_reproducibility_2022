@@ -14,24 +14,23 @@ This script is identical to the polychaete script but for bivalves, see 03a for 
 
 # Setup
 ```{r setup, include=FALSE}
-## check which of these will work best
+## install mvpart from the cran archive with devtools
 #devtools::install_github("cran/mvpart")
 library(mvpart)
 
 ## for converting to useful formats
 #install.packages('data.tree')
-library(data.tree)
+#install.packages('vegan')
+#install.packages('ape')
+#install.packages('stringr')
 
-
-# packages I know I'll need
 library(tidyverse)
 library(stringr)
 library(ggplot2)
+library(data.tree)
 library(vegan)
 library(ape)
 library(here)
-
-
 ```
 
 ```{r load-in}

@@ -8,6 +8,10 @@ output: html_document
 This script will make neat maps from the clusters and visualize the ranges!
 
 ```{r setup, include=FALSE}
+# install any packages you don't have
+#install.packages('tidytree')
+#install.packages('ggnewscale')
+
 library(tidyverse)
 library(ggplot2)
 library(tidytree)
